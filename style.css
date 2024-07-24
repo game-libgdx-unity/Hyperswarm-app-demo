@@ -1,0 +1,156 @@
+/* styles.css */
+body {
+    background-color: #121212;
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: #E0E0E0;
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 80%;
+    max-width: 600px;
+    border: 1px solid #333;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    background: #1E1E1E;
+}
+
+button, input {
+    border: none;
+    border-radius: 5px;
+    padding: 10px;
+    margin: 5px;
+    font-size: 1rem;
+}
+
+button {
+    background-color: #FF4081;
+    color: #FFFFFF;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #F50057;
+}
+
+input[type="text"] {
+    background-color: #333;
+    color: #E0E0E0;
+    padding: 10px;
+    width: calc(30% - 30px);
+    box-sizing: border-box;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.clear {
+    clear: both;
+}
+
+.flex-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.flex-left {
+    display: flex;
+}
+
+.bid-topic-label {
+    margin-right: 10px; /* Adjust space between label and text */
+    min-width: 100px;
+    margin-bottom: 10px;
+}
+
+#or-divider {
+    margin: 1rem 0;
+    font-style: italic;
+    color: #757575;
+}
+
+#setup-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+#loading-section {
+    padding: 20px;
+    text-align: center;
+}
+
+#bid-section {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+}
+
+#bid-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #333;
+}
+
+#bid-details {
+    display: flex;
+    flex-direction: column;
+}
+
+#bid-messages {
+    flex: 1;
+    font-family: 'Courier New', Courier, monospace;
+    overflow-y: auto;
+    max-height: 60vh;
+    min-height: 10vh;
+    padding: 0.5rem;
+    border: 1px solid #B0D944;
+    border-radius: 0.25rem;
+}
+
+#message-form {
+    display: flex;
+    padding: 10px;
+    background-color: #333;
+}
+
+#price-input {
+    flex: 1;
+    padding: 10px;
+    margin-right: 10px;
+}
+
+#item-select {
+    width: 15%;
+    padding: 10px;
+    color: black;
+    font-weight: bold;
+}
+
+#send-bid {
+    background-color: #00E676;
+    color: #121212;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    width: 20%;
+}
+
+#send-bid:hover {
+    background-color: #00C853;
+}
