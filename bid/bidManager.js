@@ -32,8 +32,14 @@ class ItemBidAlreadyCreated extends Error {
     }
 }
 class CannotPlacePriceForYourOwnItem extends Error {
+    constructor() {
+        super("You cannot place price for your own bid");
+    }
 }
 class UserDoesNotOwnItem extends Error {
+    constructor() {
+        super("You do not own this item");
+    }
 }
 
 class PriceIsLowerThanCurrent extends Error {
@@ -90,6 +96,9 @@ class BidManager
     getCurrentBidData = () => this._bids
     createBid = (itemId, price) => {
         price = this.validatePrice(price)
+        if (this._bids.hasOwnProperty(itemId)) {
+            throw new ItemBidAlreadyCreated()
+        }
         this._bids[itemId] = new BidData(
             this._owner,
             itemId,

@@ -23,19 +23,21 @@
  * This source code is the property of Vinh Vu. It cannot be re-used or shared
  * with anyone else without his consent.
  */
-
 import { UIElement } from "../core/UIElement.js";
-import {ChatMessageDetail, PlacePriceDetail, RoomDetail} from "../core/DTOs.js";
-import {triggerLocalEvent, addEventHandler} from "../core/utils.js";
-import {SwarmCommand} from "../swarm/swarmCommand.js";
-import {ChatUICommand} from "./ChatUICommand.js";
-
-
-import {Elements} from "../elements.js";
-import {bidManager} from "../bid/bidManager.js";
+import { ChatMessageDetail, PlacePriceDetail, RoomDetail } from "../core/DTOs.js";
+import { triggerLocalEvent, addEventHandler } from "../core/utils.js";
+import { SwarmCommand } from "../swarm/swarmCommand.js";
+import { ChatUICommand } from "./ChatUICommand.js";
+import { Elements } from "../elements.js";
+import { bidManager } from "../bid/bidManager.js";
 
 export class BidUIHandler {
     constructor() {
+        this.initializeUIElements();
+        this.setupEventHandlers();
+    }
+
+    initializeUIElements() {
         this.roomTopicUI = new UIElement(`#${Elements.BidDetails.TOPIC}`);
         this.loadingUI = new UIElement(`#${Elements.Sections.LOADING}`);
         this.welcomeUI = new UIElement(`#${Elements.Sections.SETUP}`);
@@ -45,98 +47,119 @@ export class BidUIHandler {
         this.optItemSelect = new UIElement(`#${Elements.TextFields.ITEM_SELECT}`);
         this.listMessageUI = new UIElement(`#${Elements.BidDetails.MESSAGES}`);
         this.peerCountUI = new UIElement(`#${Elements.BidDetails.PEERS_COUNT}`);
+        this.txtSellerPublicKey = new UIElement(`#${Elements.TextFields.BID_USER_INPUT}`);
+
         this.btnCreateRoom = new UIElement(`#${Elements.Buttons.CREATE_ROOM}`);
         this.btnJoinRoom = new UIElement(`#${Elements.Buttons.JOIN_ROOM}`);
         this.btnPlacePrice = new UIElement(`#${Elements.Buttons.BID_SEND}`);
         this.btnCloseBid = new UIElement(`#${Elements.Buttons.BID_CLOSE}`);
-        this.txtSellerPublicKey = new UIElement(`#${Elements.TextFields.BID_USER_INPUT}`);
         this.btnCreateBid = new UIElement(`#${Elements.Buttons.BID_CREATE}`);
-        this.btnCreateRoom.onClick(e => {
-            e.preventDefault()
-            triggerLocalEvent(ChatUICommand.CREATE_ROOM)
-        });
-        this.btnJoinRoom.onClick(e => {
-            e.preventDefault();
-            const topicStr = this.txtChatTopic.getText();
-            triggerLocalEvent(ChatUICommand.JOIN_ROOM, new RoomDetail(topicStr));
-        });
-        this.btnPlacePrice.onClick(e => {
-            e.preventDefault();
-            const sellerPubKey = this.txtSellerPublicKey.getText();
-            const itemId = this.optItemSelect.value();
-            const price = this.txtPriceInput.getText();
-            if (price && sellerPubKey && itemId) {
-                triggerLocalEvent(ChatUICommand.UI_PLACE_PRICE, new PlacePriceDetail(
-                    sellerPubKey, itemId, price)
-                );
-                this.txtPriceInput.setText('');
-            } else {
-                triggerLocalEvent(SwarmCommand.SEND_MESSAGE_LOCALLY, new ChatMessageDetail('ERROR', "Invalid input for placing price!"));
-            }
-        });
-        this.btnCreateBid.onClick(e => {
-            e.preventDefault();
-            try {
-                const price = this.txtPriceInput.getText();
-                const selectedItem = this.optItemSelect.value();
-                const message = bidManager.createBid(selectedItem, price)
-                triggerLocalEvent(ChatUICommand.UI_UPDATE_BID, new ChatMessageDetail('All', message));
-                this.txtPriceInput.setText('');
-            } catch (e) {
-                const message = e.message
-                triggerLocalEvent(SwarmCommand.SEND_MESSAGE_LOCALLY, new ChatMessageDetail('ERROR', message));
-            }
-        })
-        this.btnCloseBid.onClick(e => {
-            e.preventDefault();
-            try {
-                const selectedItem = this.optItemSelect.value();
-                const message = bidManager.closeBid(selectedItem)
-                triggerLocalEvent(ChatUICommand.UI_UPDATE_BID, new ChatMessageDetail('All', message));
-                this.txtPriceInput.setText('');
-            } catch (e) {
-                const message = e.message
-                triggerLocalEvent(SwarmCommand.SEND_MESSAGE_LOCALLY, new ChatMessageDetail('ERROR', message));
-            }
-        });
+    }
+
+    setupEventHandlers() {
+        this.btnCreateRoom.onClick(this.handleCreateRoom);
+        this.btnJoinRoom.onClick(this.handleJoinRoom);
+        this.btnPlacePrice.onClick(this.handlePlacePrice);
+        this.btnCreateBid.onClick(this.handleCreateBid);
+        this.btnCloseBid.onClick(this.handleCloseBid);
+
         addEventHandler(SwarmCommand.SEND_MESSAGE_LOCALLY, this.onMessageAdded);
         addEventHandler(SwarmCommand.SHOW_LOADING, this.showLoading);
         addEventHandler(SwarmCommand.SHOW_BID_ROOM, this.showChatRoom);
         addEventHandler(SwarmCommand.UPDATE_PEER_COUNT, (e) => this.updatePeerCount(e.detail));
-
-        addEventHandler(SwarmCommand.SHOW_SELLER_UI, ()=> {
-            this.txtSellerPublicKey.hide()
-            this.btnPlacePrice.hide()
-        });
-        addEventHandler(SwarmCommand.SHOW_BUYER_UI, ()=> {
-            this.btnCreateBid.hide()
-            this.btnCloseBid.hide()
-        });
+        addEventHandler(SwarmCommand.SHOW_SELLER_UI, this.showSellerUI);
+        addEventHandler(SwarmCommand.SHOW_BUYER_UI, this.showBuyerUI);
     }
+
+    handleCreateRoom = (e) => {
+        e.preventDefault();
+        triggerLocalEvent(ChatUICommand.CREATE_ROOM);
+    };
+
+    handleJoinRoom = (e) => {
+        e.preventDefault();
+        const topicStr = this.txtChatTopic.getText();
+        triggerLocalEvent(ChatUICommand.JOIN_ROOM, new RoomDetail(topicStr));
+    };
+
+    handlePlacePrice = (e) => {
+        e.preventDefault();
+        const sellerPubKey = this.txtSellerPublicKey.getText();
+        const itemId = this.optItemSelect.value();
+        const price = this.txtPriceInput.getText();
+
+        if (price && sellerPubKey && itemId) {
+            triggerLocalEvent(ChatUICommand.UI_PLACE_PRICE, new PlacePriceDetail(sellerPubKey, itemId, price));
+            this.txtPriceInput.setText('');
+        } else {
+            this.showError("Invalid input for placing price!");
+        }
+    };
+
+    handleCreateBid = (e) => {
+        e.preventDefault();
+        try {
+            const price = this.txtPriceInput.getText();
+            const selectedItem = this.optItemSelect.value();
+            const message = bidManager.createBid(selectedItem, price);
+
+            triggerLocalEvent(ChatUICommand.UI_UPDATE_BID, new ChatMessageDetail('All', message));
+            this.txtPriceInput.setText('');
+        } catch (error) {
+            this.showError(error.message);
+        }
+    };
+
+    handleCloseBid = (e) => {
+        e.preventDefault();
+        try {
+            const selectedItem = this.optItemSelect.value();
+            const message = bidManager.closeBid(selectedItem);
+
+            triggerLocalEvent(ChatUICommand.UI_UPDATE_BID, new ChatMessageDetail('All', message));
+            this.txtPriceInput.setText('');
+        } catch (error) {
+            this.showError(error.message);
+        }
+    };
 
     showLoading = () => {
         this.welcomeUI.hide();
         this.loadingUI.show();
     };
 
-    showChatRoom = event => {
+    showChatRoom = (event) => {
         const { topic } = event.detail;
-        console.log({topic})
         this.roomTopicUI.setText(topic);
         this.loadingUI.hide();
         this.chatUI.show();
     };
 
-    updatePeerCount = peerCount => {
+    updatePeerCount = (peerCount) => {
         this.peerCountUI.setText(peerCount);
     };
 
-    onMessageAdded = event => {
+    onMessageAdded = (event) => {
         const { from, message } = event.detail;
         const $div = document.createElement('div');
         $div.textContent = `<${from}> ${message}`;
         this.listMessageUI.appendChild($div);
-        const messageList = this.listMessageUI.element()
+
+        const messageList = this.listMessageUI.element();
         messageList.scrollTop = messageList.scrollHeight;
+    };
+
+    showSellerUI = () => {
+        this.txtSellerPublicKey.hide();
+        this.btnPlacePrice.hide();
+    };
+
+    showBuyerUI = () => {
+        this.btnCreateBid.hide();
+        this.btnCloseBid.hide();
+    };
+
+    showError = (message) => {
+        triggerLocalEvent(SwarmCommand.SEND_MESSAGE_LOCALLY, new ChatMessageDetail('ERROR', message));
     };
 }
