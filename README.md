@@ -19,3 +19,5 @@ How to run:
 Please follow this page https://docs.pears.com/guides/getting-started to install pear in your local
 
 To start the project run: pear dev
+
+https://youtu.be/TdNk5aU52Qs
