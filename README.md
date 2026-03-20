@@ -16,7 +16,7 @@ Sample scenario:
 -
 
 How to run:
-Please follow this page https://docs.pears.com/guides/getting-started to install pear in your local
+Please follow this page [https://docs.pears.com/guides/getting-started](https://docs.pears.com/guide/getting-started.html) to install pear in your local
 
 To start the project run: pear dev
 
